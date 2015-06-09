@@ -76,6 +76,18 @@ module Doorkeeper::OAuth::Helpers
           expect(URIChecker.matches?(uri, client_uri)).to be false
         end
       end
+
+      it 'doesn\'t allow non-matching domains through' do
+        uri = 'http://app.abc/?query=hello'
+        client_uri = 'http://app.co'
+        expect(URIChecker.matches?(uri, client_uri)).to be_falsey
+      end
+
+      it 'doesn\'t allow non-matching domains that don\'t start at the beginning' do
+        uri = 'http://app.co/?query=hello'
+        client_uri = 'http://example.com?app.co=test'
+        expect(URIChecker.matches?(uri, client_uri)).to be_falsey
+      end
     end
 
     describe '.valid_for_authorization?' do
