@@ -18,7 +18,11 @@ class RedirectUriValidator < ActiveModel::EachValidator
       end
     end
   rescue URI::InvalidURIError
-    record.errors.add(attribute, :invalid_uri)
+    unless Doorkeeper.configuration.wildcard_redirect_uri
+      record.errors.add(attribute, :invalid_uri)
+    else
+      true
+    end
   end
 
   private

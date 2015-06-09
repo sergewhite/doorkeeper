@@ -53,6 +53,30 @@ module Doorkeeper::OAuth::Helpers
         expect(URIChecker.matches?(uri, client_uri)).to be_truthy
       end
 
+      context 'allows wildcard redirect_uri' do
+        before do
+          Doorkeeper.configuration.stub(wildcard_redirect_uri: true)
+        end
+
+        it 'ignores query parameter on comparison' do
+          uri = 'http://app.co/?query=hello'
+          client_uri = 'http://app.co'
+          expect(URIChecker.matches?(uri, client_uri)).to be true
+        end
+
+        it 'doesn\'t allow non-matching domains through' do
+          uri = 'http://app.abc/?query=hello'
+          client_uri = 'http://app.co'
+          expect(URIChecker.matches?(uri, client_uri)).to be false
+        end
+
+        it 'doesn\'t allow non-matching domains that don\'t start at the beginning' do
+          uri = 'http://app.co/?query=hello'
+          client_uri = 'http://example.com?app.co=test'
+          expect(URIChecker.matches?(uri, client_uri)).to be false
+        end
+      end
+
       it 'doesn\'t allow non-matching domains through' do
         uri = 'http://app.abc/?query=hello'
         client_uri = 'http://app.co'
@@ -98,6 +122,17 @@ module Doorkeeper::OAuth::Helpers
       it 'is false if invalid' do
         uri = client_uri = 'http://app.co/aaa?waffles=abc'
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be false
+      end
+
+      context 'allows wildcard redirect_uri' do
+        before do
+          Doorkeeper.configuration.stub(wildcard_redirect_uri: true)
+        end
+
+        it 'is true if valid, matches and contains a query parameter' do
+          uri = client_uri = 'http://app.co/aaa?waffles=abc'
+          expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be true
+        end
       end
     end
   end
